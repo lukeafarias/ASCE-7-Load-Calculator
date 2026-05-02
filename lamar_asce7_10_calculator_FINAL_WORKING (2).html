@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lamar University ASCE 7 MWFRS Load Calculator</title>
+<style>
+:root {
+  --red:#C8102E;
+  --darkred:#9D102B;
+  --black:#050505;
+  --gray:#5f6673;
+  --lightgray:#f3f4f6;
+  --border:#d7dce3;
+  --card:#ffffff;
+  --text:#111827;
+  --muted:#667085;
+  --shadow:0 8px 24px rgba(0,0,0,.10);
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:#f4f5f7;
+  color:var(--text);
+}
+.header {
+  height:104px;
+  background:#fff;
+  display:flex;
+  align-items:center;
+  padding:14px 28px;
+  border-bottom:6px solid var(--red);
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+.header::after {
+  content:"";
+  position:absolute;
+  right:0;
+  top:0;
+  height:100%;
+  width:340px;
+  background:linear-gradient(120deg, transparent 0 20%, #111 20% 27%, transparent 27% 31%, var(--red) 31% 100%);
+  opacity:.98;
+  z-index:-1;
+}
+.logo-img { max-height:74px; max-width:520px; object-fit:contain; }
+.layout { display:grid; grid-template-columns:245px 1fr; min-height:calc(100vh - 104px); }
+.sidebar {
+  background:linear-gradient(180deg,#070707 0%,#111 7%,var(--red) 7%,#b20f2b 74%,#050505 74%);
+  color:white;
+  padding:20px 0;
+}
+.nav-title { padding:0 24px 16px; font-size:.82rem; letter-spacing:.08em; opacity:.78; text-transform:uppercase; }
+.nav a {
+  display:flex; align-items:center; gap:11px; padding:13px 24px; color:white; text-decoration:none;
+  font-weight:700; border-left:4px solid transparent;
+}
+.nav a:hover { background:rgba(255,255,255,.11); border-left-color:white; }
+.nav .icon { width:22px; text-align:center; }
+.side-footer { margin-top:40px; padding:26px 24px; color:#fff; font-weight:800; }
+.side-footer span { display:block; color:#ffbac4; font-size:.82rem; font-style:italic; margin-top:3px; }
+.main { padding:20px; }
+.dashboard { display:grid; grid-template-columns:1.1fr .9fr 1fr; gap:14px; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
+.gridWide { display:grid; grid-template-columns:1.1fr .9fr; gap:14px; margin-top:14px; }
+.full { margin-top:14px; }
+@media (max-width:1150px) {
+  .layout { grid-template-columns:1fr; }
+  .sidebar { display:none; }
+  .dashboard,.grid2,.gridWide { grid-template-columns:1fr; }
+  .header::after { display:none; }
+}
+.card {
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  box-shadow:var(--shadow);
+  padding:16px;
+}
+.card h2 {
+  margin:0 0 14px;
+  font-size:1rem;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  text-transform:uppercase;
+  letter-spacing:.02em;
+}
+.card h2 .mark { color:var(--red); font-size:1.25rem; }
+.fields { display:grid; grid-template-columns:1fr 1fr; gap:10px 12px; }
+.fields3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px 12px; }
+@media (max-width:800px) { .fields,.fields3 { grid-template-columns:1fr; } }
+label { display:block; font-size:.79rem; color:#344054; font-weight:700; margin-bottom:4px; }
+input,select,textarea {
+  width:100%;
+  border:1px solid #cfd6df;
+  background:#fff;
+  border-radius:7px;
+  padding:8px 9px;
+  font-size:.92rem;
+}
+input:focus,select:focus,textarea:focus { outline:none; border-color:var(--red); box-shadow:0 0 0 3px rgba(200,16,46,.10); }
+.resultBox {
+  border:1px solid var(--border);
+  background:linear-gradient(180deg,#fff,#f8fafc);
+  border-radius:10px;
+  padding:12px;
+  text-align:center;
+  margin-bottom:8px;
+}
+.resultBox .label { color:#333; font-weight:700; font-size:.85rem; }
+.resultBox .value { margin-top:8px; color:var(--red); font-size:1.7rem; font-weight:900; }
+.resultBox small { color:#222; font-weight:700; }
+.table { width:100%; border-collapse:collapse; font-size:.88rem; }
+.table th,.table td { border-bottom:1px solid #e5e7eb; padding:7px; text-align:left; vertical-align:middle; }
+.table th { background:#f9fafb; font-size:.78rem; }
+.table input,.table select { min-width:85px; }
+.btnRow { display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+button {
+  border:0; background:var(--red); color:white; font-weight:800; border-radius:8px; padding:10px 14px; cursor:pointer;
+}
+button.secondary { background:#111827; }
+textarea { min-height:220px; font-family:Consolas, Menlo, monospace; font-size:.82rem; }
+.note { margin-top:10px; color:var(--muted); font-size:.83rem; line-height:1.45; }
+.bigLine { font-size:1.25rem; color:var(--red); font-weight:900; white-space:nowrap; }
+.status {
+  background:#ecfdf3; color:#027a48; border:1px solid #abefc6; padding:10px; border-radius:9px;
+  font-size:.9rem; line-height:1.4; margin-bottom:10px;
+}
+.copyBtn { float:right; padding:8px 12px; font-size:.85rem; }
+.badge { display:inline-block; background:#ffe4e8; color:#9d102b; border-radius:999px; padding:3px 9px; font-size:.72rem; font-weight:900; }
+.helper { font-size:.76rem; color:#667085; margin-top:3px; }
+.windTable td:nth-child(3), .windTable td:nth-child(4), .windTable td:nth-child(5) { font-weight:700; }
+.negative { color:#9d102b; font-weight:900; }
+.positive { color:#047857; font-weight:900; }
+
+.comboTable td:last-child { font-weight:900; color:var(--red); }
+.refBox {
+  border:1px solid #fed7aa;
+  background:#fff7ed;
+  color:#9a3412;
+  border-radius:10px;
+  padding:10px;
+  font-size:.82rem;
+  line-height:1.45;
+  margin-top:10px;
+}
+</style>
+</head>
+<body>
+<header class="header">
+  <img class="logo-img" src="data:image/png;base64,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" alt="Lamar University Logo">
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="nav-title">Calculator Sections</div>
+    <nav class="nav">
+      <a href="#geometry"><span class="icon">▦</span>Project & Geometry</a>
+      <a href="#trib"><span class="icon">▥</span>Tributary Area</a>
+      <a href="#material"><span class="icon">▣</span>Material / System</a>
+      <a href="#dead"><span class="icon">▤</span>Dead Load</a>
+      <a href="#live"><span class="icon">♟</span>Live Load</a>
+      <a href="#wind"><span class="icon">≋</span>Full MWFRS Wind</a>
+      <a href="#summary"><span class="icon">▧</span>Load Summary</a>
+      <a href="#staad"><span class="icon">⎘</span>STAAD Output</a>
+    </nav>
+    <div class="side-footer">LAMAR UNIVERSITY<span>Engineering Design Aid</span></div>
+  </aside>
+
+  <main class="main">
+    <div class="dashboard">
+      <section class="card" id="geometry">
+        <h2><span class="mark">▦</span>Project & Geometry <span class="badge">Reusable</span></h2>
+        <div class="fields">
+          <div><label>Project Name</label><input id="projectName" value="Church MWFRS Project"></div>
+          <div><label>Location</label><select id="location" onchange="applyLocationDefaults()"><option>Beaumont, Texas</option><option>Houston, Texas</option><option>El Paso, Texas</option><option>Dallas, Texas</option><option>Custom / TBD</option></select></div>
+          <div><label>ASCE 7 Edition</label><select id="edition"><option>ASCE 7-16</option><option>ASCE 7-22</option><option>ASCE 7-10</option></select></div>
+          <div><label>Risk Category</label><select id="risk" onchange="applyRiskCategory()"><option>I</option><option selected>II</option><option>III</option><option>IV</option></select></div>
+          <div><label>Building Enclosure</label><select id="enclosure" onchange="applyEnclosure()"><option value="enclosed" selected>Enclosed</option><option value="partially">Partially Enclosed</option><option value="open">Open</option></select></div>
+          <div><label>Analysis Direction</label><select id="direction" onchange="applyDirection()"><option>Transverse Frame</option><option>Longitudinal Frame</option><option>Roof Uplift</option></select></div>
+          <div><label>Building Length (ft)</label><input id="buildingLength" type="number" value="180" step="0.01"></div>
+          <div><label>Building Width / Span (ft)</label><input id="buildingWidth" type="number" value="60" step="0.01"></div>
+          <div><label>Eave Height h (ft)</label><input id="eaveHeight" type="number" value="20" step="0.01"></div>
+          <div><label>Roof Rise, Eave to Ridge (ft)</label><input id="roofRise" type="number" value="20" step="0.01"></div>
+          <div><label>Frame Spacing (ft)</label><input id="frameSpacing" type="number" value="20" step="0.01"></div>
+          <div><label>Purlin Spacing (in)</label><input id="purlinSpacingIn" type="number" value="16" step="0.01"></div>
+        </div>
+      </section>
+
+      <section class="card" id="trib">
+        <h2><span class="mark">▥</span>Tributary Area Calculator</h2>
+        <div><label>Select Method</label>
+          <select id="tribMethod">
+            <option value="roofFrame" selected>One transverse roof frame</option>
+            <option value="manual">Manual area input</option>
+            <option value="beamSpanWidth">Beam/frame: span × tributary width</option>
+            <option value="rectBay">Rectangular bay</option>
+            <option value="interiorBeam">Interior beam: span × (left/2 + right/2)</option>
+          </select>
+          <div class="helper">Choose “Manual area input” if you want Manual Area to directly control the live-load reduction calculations.</div>
+        </div>
+        <div class="resultBox"><div class="label">Tributary Width to Frame / Member</div><div class="value"><span id="tribWidthOut">—</span> <small>ft</small></div></div>
+        <div class="resultBox"><div class="label">Tributary Area Used in Calculations</div><div class="value"><span id="ATout">—</span> <small>ft²</small></div></div>
+        <div class="fields">
+          <div><label>Member Span (ft)</label><input id="memberSpan" type="number" value="30" step="0.01"></div>
+          <div><label>Tributary Width (ft)</label><input id="tribWidth" type="number" value="10" step="0.01"></div>
+          <div><label>Manual Area (sf)</label><input id="manualArea" type="number" value="600" step="0.01"></div>
+          <div><label>Bay Length (ft)</label><input id="bayLength" type="number" value="20" step="0.01"></div>
+          <div><label>Bay Width (ft)</label><input id="bayWidth" type="number" value="30" step="0.01"></div>
+          <div><label>Left Spacing (ft)</label><input id="leftSpacing" type="number" value="10" step="0.01"></div>
+          <div><label>Right Spacing (ft)</label><input id="rightSpacing" type="number" value="10" step="0.01"></div>
+          <div><label>Roof Gravity Area Basis</label><select id="areaBasis"><option value="plan" selected>Plan/projected</option><option value="slope">Sloped roof</option></select></div>
+        </div>
+      </section>
+
+      <section class="card" id="material">
+        <h2><span class="mark">▣</span>Material / System</h2>
+        <div class="fields">
+          <div><label>Primary Material</label><select id="material"><option selected>Glue Laminated Wood (Glulam)</option><option>Dimensional Lumber</option><option>CLT / Mass Timber</option><option>Structural Steel</option><option>Steel Joist</option><option>Cold-Formed Steel</option><option>Cast-in-Place Concrete</option><option>Precast Concrete</option><option>Composite Steel + Concrete</option><option>Masonry-Supported Framing</option><option>Custom</option></select></div>
+          <div><label>System Type</label><select id="systemType"><option selected>Roof Framing / MWFRS</option><option>Beam</option><option>Girder</option><option>Joist</option><option>Purlin</option><option>Truss</option><option>One-Way Slab</option><option>Two-Way Slab</option><option>Column Line / Frame</option></select></div>
+          <div><label>Roof Shape</label><select id="roofShape" onchange="applyRoofShape()"><option selected>Symmetrical Gable</option><option>Mono-Slope</option><option>Flat / Low Slope</option><option>Hip Roof</option><option>Custom</option></select></div>
+          <div><label>Design Method</label><select id="designMethod"><option>ASD</option><option selected>LRFD</option></select></div>
+          <div><label>KLL Factor</label><select id="KLL"><option value="1">1.0</option><option value="2" selected>2.0</option><option value="3">3.0</option><option value="4">4.0</option></select></div>
+          <div><label>Floors Supported</label><select id="floorsSupported"><option value="1" selected>1 Floor</option><option value="2">2 or More Floors</option></select></div>
+        </div>
+      </section>
+    </div>
+
+
+    <section class="card full" id="asce-settings">
+      <h2><span class="mark">⚖</span>ASCE 7-10 Settings / Code Controls</h2>
+      <div class="fields3">
+        <div>
+          <label>ASCE Procedure Focus</label>
+          <select id="asceProcedure">
+            <option value="gravityWind" selected>Gravity + MWFRS Wind</option>
+            <option value="windOnly">MWFRS Wind Only</option>
+            <option value="gravityOnly">Gravity Only</option>
+          </select>
+        </div>
+        <div>
+          <label>MWFRS Wind Procedure</label>
+          <select id="mwfrsProcedure">
+            <option value="chapter27">Chapter 27 Directional Procedure</option>
+            <option value="chapter28" selected>Chapter 28 Envelope Procedure - Low-Rise</option>
+            <option value="manual">Manual Coefficients / Class Method</option>
+          </select>
+        </div>
+        <div>
+          <label>Load Combination Set</label>
+          <select id="comboSet">
+            <option value="lrfd" selected>Strength / LRFD</option>
+            <option value="asd">Allowable Stress Design / ASD</option>
+            <option value="both">Show Both</option>
+          </select>
+        </div>
+        <div><label>Wind Load Factor for ASD</label><input id="asdWindFactor" type="number" value="0.6" step="0.01"></div>
+        <div><label>Wind Load Factor for LRFD</label><input id="lrfdWindFactor" type="number" value="1.0" step="0.01"></div>
+        <div><label>Include Roof Live in Wind Combos?</label><select id="includeLrWind"><option value="yes" selected>Yes</option><option value="no">No</option></select></div>
+      </div>
+      <div class="refBox">
+        ASCE 7-10 controls used in this tool: Chapter 2 load combinations, Chapter 3 dead loads, Chapter 4 live and roof live loads, and Chapters 26–28 for MWFRS wind setup. The calculator keeps ASCE figure/table coefficients editable so you can match your instructor’s selected method exactly.
+      </div>
+    </section>
+
+
+    <div class="grid2">
+      <section class="card" id="dead">
+        <h2><span class="mark">▤</span>Dead Load (DL)</h2>
+        <table class="table">
+          <thead><tr><th>Layer</th><th>Type</th><th>Thickness (in)</th><th>Unit Wt. (pcf)</th><th>Load psf</th></tr></thead>
+          
+          <tbody>
+            <tr>
+              <td><input id="l1name" value="Drywall / Ceiling"></td>
+              <td>
+                <select id="l1type" onchange="applyLayerMaterial(1)">
+                  <option value="gypsum" selected>Gypsum Board / Drywall</option>
+                  <option value="plywood">Plywood / OSB Sheathing</option>
+                  <option value="insulation_poly">Polystyrene Insulation</option>
+                  <option value="insulation_fiber">Fiberglass Insulation</option>
+                  <option value="asphalt_shingles">Asphalt Shingles</option>
+                  <option value="metal_roof">Metal Roofing</option>
+                  <option value="built_up_roof">Built-up Roofing</option>
+                  <option value="wood">Wood Framing</option>
+                  <option value="steel">Steel</option>
+                  <option value="concrete_normal">Normal Weight Concrete</option>
+                  <option value="concrete_light">Lightweight Concrete</option>
+                  <option value="masonry">Masonry</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </td>
+              <td><input id="l1thick" type="number" value="0.5" step="0.01"></td>
+              <td><input id="l1unit" type="number" value="50" step="0.01"></td>
+              <td><input id="l1psf" type="number" value="2.08" step="0.01"></td>
+            </tr>
+            <tr>
+              <td><input id="l2name" value="Insulation"></td>
+              <td>
+                <select id="l2type" onchange="applyLayerMaterial(2)">
+                  <option value="gypsum">Gypsum Board / Drywall</option>
+                  <option value="plywood">Plywood / OSB Sheathing</option>
+                  <option value="insulation_poly" selected>Polystyrene Insulation</option>
+                  <option value="insulation_fiber">Fiberglass Insulation</option>
+                  <option value="asphalt_shingles">Asphalt Shingles</option>
+                  <option value="metal_roof">Metal Roofing</option>
+                  <option value="built_up_roof">Built-up Roofing</option>
+                  <option value="wood">Wood Framing</option>
+                  <option value="steel">Steel</option>
+                  <option value="concrete_normal">Normal Weight Concrete</option>
+                  <option value="concrete_light">Lightweight Concrete</option>
+                  <option value="masonry">Masonry</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </td>
+              <td><input id="l2thick" type="number" value="0.5" step="0.01"></td>
+              <td><input id="l2unit" type="number" value="1.5" step="0.01"></td>
+              <td><input id="l2psf" type="number" value="0.06" step="0.01"></td>
+            </tr>
+            <tr>
+              <td><input id="l3name" value="Plywood Sheathing"></td>
+              <td>
+                <select id="l3type" onchange="applyLayerMaterial(3)">
+                  <option value="gypsum">Gypsum Board / Drywall</option>
+                  <option value="plywood" selected>Plywood / OSB Sheathing</option>
+                  <option value="insulation_poly">Polystyrene Insulation</option>
+                  <option value="insulation_fiber">Fiberglass Insulation</option>
+                  <option value="asphalt_shingles">Asphalt Shingles</option>
+                  <option value="metal_roof">Metal Roofing</option>
+                  <option value="built_up_roof">Built-up Roofing</option>
+                  <option value="wood">Wood Framing</option>
+                  <option value="steel">Steel</option>
+                  <option value="concrete_normal">Normal Weight Concrete</option>
+                  <option value="concrete_light">Lightweight Concrete</option>
+                  <option value="masonry">Masonry</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </td>
+              <td><input id="l3thick" type="number" value="0.75" step="0.01"></td>
+              <td><input id="l3unit" type="number" value="34" step="0.01"></td>
+              <td><input id="l3psf" type="number" value="2.13" step="0.01"></td>
+            </tr>
+            <tr>
+              <td><input id="l4name" value="Roof Covering"></td>
+              <td>
+                <select id="l4type" onchange="applyLayerMaterial(4)">
+                  <option value="gypsum">Gypsum Board / Drywall</option>
+                  <option value="plywood">Plywood / OSB Sheathing</option>
+                  <option value="insulation_poly">Polystyrene Insulation</option>
+                  <option value="insulation_fiber">Fiberglass Insulation</option>
+                  <option value="asphalt_shingles" selected>Asphalt Shingles</option>
+                  <option value="metal_roof">Metal Roofing</option>
+                  <option value="built_up_roof">Built-up Roofing</option>
+                  <option value="wood">Wood Framing</option>
+                  <option value="steel">Steel</option>
+                  <option value="concrete_normal">Normal Weight Concrete</option>
+                  <option value="concrete_light">Lightweight Concrete</option>
+                  <option value="masonry">Masonry</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </td>
+              <td><input id="l4thick" type="number" value="0" step="0.01"></td>
+              <td><input id="l4unit" type="number" value="0" step="0.01"></td>
+              <td><input id="l4psf" type="number" value="2.00" step="0.01"></td>
+            </tr>
+            <tr>
+              <td><input id="l5name" value="Extra / Custom DL"></td>
+              <td>
+                <select id="l5type" onchange="applyLayerMaterial(5)">
+                  <option value="custom" selected>Custom</option>
+                  <option value="gypsum">Gypsum Board / Drywall</option>
+                  <option value="plywood">Plywood / OSB Sheathing</option>
+                  <option value="insulation_poly">Polystyrene Insulation</option>
+                  <option value="insulation_fiber">Fiberglass Insulation</option>
+                  <option value="asphalt_shingles">Asphalt Shingles</option>
+                  <option value="metal_roof">Metal Roofing</option>
+                  <option value="built_up_roof">Built-up Roofing</option>
+                  <option value="wood">Wood Framing</option>
+                  <option value="steel">Steel</option>
+                  <option value="concrete_normal">Normal Weight Concrete</option>
+                  <option value="concrete_light">Lightweight Concrete</option>
+                  <option value="masonry">Masonry</option>
+                </select>
+              </td>
+              <td><input id="l5thick" type="number" value="0" step="0.01"></td>
+              <td><input id="l5unit" type="number" value="0" step="0.01"></td>
+              <td><input id="l5psf" type="number" value="0.00" step="0.01"></td>
+            </tr>
+          </tbody>
+
+        </table>
+        <div class="note">For layers with thickness and unit weight: psf = thickness(in)/12 × unit weight(pcf). If thickness or unit weight is 0, the typed psf value is used directly. Changing the material/type updates thickness, unit weight, and psf, but it does not overwrite the Layer name.</div>
+        <div class="resultBox"><div class="label">Total Dead Load</div><div class="value"><span id="DLpsf">—</span> <small>psf</small></div></div>
+      </section>
+
+      <section class="card" id="live">
+        <h2><span class="mark">♟</span>Live Load (LL / Roof LL)</h2>
+        <div class="fields">
+          <div><label>Load Type</label><select id="loadType"><option value="roof" selected>Roof Live Load</option><option value="floor">Floor Live Load</option></select></div>
+          <div><label>Roof Type for Roof Live Load</label>
+            <select id="roofLiveType" onchange="applyRoofLiveType()">
+              <option value="gable" selected>Gable roof</option>
+              <option value="hip">Hip roof</option>
+              <option value="monoslope">Monoslope roof</option>
+              <option value="custom">Custom roof factors</option>
+            </select>
+          </div>
+          <div><label>Occupancy / Use</label><select id="occupancy" onchange="applyOccupancy()"><option value="roofOrdinary" selected>Ordinary Roof - 20 psf</option><option value="church">Places of Worship - 60 psf</option><option value="assemblyFixed">Assembly Fixed Seats - 60 psf</option><option value="assemblyMovable">Assembly Movable Seats - 100 psf</option><option value="office">Office - 50 psf</option><option value="residential">Residential - 40 psf</option><option value="classroom">Classroom - 40 psf</option><option value="corridor">Corridor - 80 psf</option><option value="lobby">Lobby / Public Area - 100 psf</option><option value="storageLight">Light Storage - 125 psf</option><option value="custom">Custom</option></select></div>
+          <div><label>Unreduced L0 or Lo (psf)</label><input id="L0" type="number" value="20" step="0.01"></div>
+          <div><label>Roof Area Factor R1</label><input id="R1" type="number" value="1.00" step="0.01"></div>
+          <div><label>Roof Slope Factor R2</label><input id="R2" type="number" value="1.00" step="0.01"></div>
+          <div><label>Reduction Rule</label><select id="reductionRule"><option value="auto" selected>Auto</option><option value="forceNoReduce">Force No Reduction</option><option value="forceReduce">Force Reduction</option></select></div>
+        </div>
+        <div class="resultBox"><div class="label">Live Load Used</div><div class="value"><span id="LLpsf">—</span> <small>psf</small></div></div>
+        <div class="note" id="liveNote"></div><div class="note">Gable/hip/monoslope roof types update Lo, R1, and R2 automatically. These are starter values; edit R1/R2 if your ASCE 7-10 table or class notes give a different factor.</div>
+      </section>
+    </div>
+
+    <section class="card full" id="wind">
+      <h2><span class="mark">≋</span>Full MWFRS Wind Breakdown <span class="badge">Walls + Roof + Vertical</span></h2>
+      <div class="fields3">
+        <div><label>Basic Wind Speed V (mph)</label><input id="windSpeed" type="number" value="115" step="0.01"></div>
+        <div><label>Exposure Category</label><select id="exposure" onchange="applyExposure()"><option value="B" selected>B</option><option value="C">C</option><option value="D">D</option></select></div>
+        <div><label>Kz at Mean Roof Height</label><input id="Kz" type="number" value="0.70" step="0.01"></div>
+        <div><label>Kzt Topographic Factor</label><input id="Kzt" type="number" value="1.00" step="0.01"></div>
+        <div><label>Kd Directionality Factor</label><input id="Kd" type="number" value="0.85" step="0.01"></div>
+        <div><label>Mean Roof Height Input</label><select id="meanHeightMode"><option value="auto" selected>Auto: eave + rise/2</option><option value="manual">Manual</option></select></div>
+        <div><label>Manual Mean Roof Height (ft)</label><input id="manualMeanHeight" type="number" value="30" step="0.01"></div>
+        <div><label>qh / qz pressure basis</label><select id="windPressureBasis" onchange="applyWindPressureBasis()"><option value="qh" selected>Use qh for all MWFRS surfaces</option><option value="separate">Use qz for windward wall, qh elsewhere</option></select></div>
+        <div><label>GCpi Sign Case</label><select id="gcpiCase" onchange="applyGcpiCase()"><option value="both" selected>Show both +GCpi and -GCpi</option><option value="positive">Use +GCpi only</option><option value="negative">Use -GCpi only</option></select></div>
+      </div>
+
+      <h3>External Pressure Coefficients</h3>
+      <div class="fields3">
+        <div><label>Coefficient Preset</label><select id="windCoeffPreset" onchange="applyWindCoefficientPreset()"><option value="manual" selected>Manual / From ASCE Figure</option><option value="gableLowRise">Low-Rise Gable Starter Values</option><option value="conservativeUplift">Conservative Roof Uplift Starter Values</option><option value="wallsOnly">Walls Only Starter Values</option></select></div>
+        <div><label>Windward Wall GCp</label><input id="GCpWW" type="number" value="0.80" step="0.01"></div>
+        <div><label>Leeward Wall GCp</label><input id="GCpLW" type="number" value="-0.50" step="0.01"></div>
+        <div><label>Side Wall GCp</label><input id="GCpSW" type="number" value="-0.70" step="0.01"></div>
+        <div><label>Windward Roof GCp</label><input id="GCpWR" type="number" value="-0.90" step="0.01"></div>
+        <div><label>Leeward Roof GCp</label><input id="GCpLR" type="number" value="-0.50" step="0.01"></div>
+        <div><label>Internal Pressure |GCpi|</label><input id="GCpiAbs" type="number" value="0.18" step="0.01"></div>
+      </div>
+
+      <div class="fields3">
+        <div class="resultBox"><div class="label">Mean Roof Height</div><div class="value"><span id="meanHeightOut">—</span> <small>ft</small></div></div>
+        <div class="resultBox"><div class="label">Velocity Pressure qh</div><div class="value"><span id="qhOut">—</span> <small>psf</small></div></div>
+        <div class="resultBox"><div class="label">Velocity Pressure qz at Wall</div><div class="value"><span id="qzWallOut">—</span> <small>psf</small></div></div>
+      </div>
+
+      <table class="table windTable">
+        <thead>
+          <tr>
+            <th>Surface / Case</th>
+            <th>Formula Used</th>
+            <th>Pressure with +GCpi (psf)</th>
+            <th>Pressure with -GCpi (psf)</th>
+            <th>Governing Magnitude (psf)</th>
+            <th>Line Load to Frame</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Windward Wall</td><td>p = qz(GCp) - qi(GCpi)</td><td id="wwPlus">—</td><td id="wwMinus">—</td><td id="wwGov">—</td><td id="wwLine">—</td></tr>
+          <tr><td>Leeward Wall</td><td>p = qh(GCp) - qi(GCpi)</td><td id="lwPlus">—</td><td id="lwMinus">—</td><td id="lwGov">—</td><td id="lwLine">—</td></tr>
+          <tr><td>Side Wall</td><td>p = qh(GCp) - qi(GCpi)</td><td id="swPlus">—</td><td id="swMinus">—</td><td id="swGov">—</td><td id="swLine">—</td></tr>
+          <tr><td>Windward Roof</td><td>p = qh(GCp) - qi(GCpi)</td><td id="wrPlus">—</td><td id="wrMinus">—</td><td id="wrGov">—</td><td id="wrLine">—</td></tr>
+          <tr><td>Leeward Roof</td><td>p = qh(GCp) - qi(GCpi)</td><td id="lrPlus">—</td><td id="lrMinus">—</td><td id="lrGov">—</td><td id="lrLine">—</td></tr>
+          <tr><td>Net Horizontal Frame Load</td><td>windward wall + leeward wall</td><td id="netHPlus">—</td><td id="netHMinus">—</td><td id="netHGov">—</td><td id="netHLine">—</td></tr>
+          <tr><td>Vertical Roof Load / Uplift</td><td>windward roof + leeward roof vertical component</td><td id="netVPlus">—</td><td id="netVMinus">—</td><td id="netVGov">—</td><td id="netVLine">—</td></tr>
+        </tbody>
+      </table>
+      <div class="note">Sign convention: positive = pressure toward surface or downward component; negative = suction/uplift. The roof vertical line load converts roof normal pressure into a vertical component using cos(roof slope angle). Coefficients are editable because exact ASCE 7 values depend on roof angle, h/L, direction, and the procedure your class requires.</div>
+    </section>
+
+    <div class="grid2">
+      <section class="card" id="summary">
+        <h2><span class="mark">▧</span>Loads on One Transverse Frame</h2>
+        <div class="status good" id="status">Calculator active.</div>
+        <table class="table">
+          <thead><tr><th>Load</th><th>psf</th><th>Frame Spacing</th><th>Line Load</th></tr></thead>
+          <tbody>
+            <tr><td>Dead Load</td><td id="DLcell">—</td><td id="spacing1">—</td><td><span class="bigLine" id="DLline">—</span> plf</td></tr>
+            <tr><td>Live / Roof Live</td><td id="LLcell">—</td><td id="spacing2">—</td><td><span class="bigLine" id="LLline">—</span> plf</td></tr>
+            <tr><td>Total Gravity</td><td id="totalPsf">—</td><td id="spacing3">—</td><td><span class="bigLine" id="gravityLine">—</span> plf</td></tr>
+            <tr><td>Max Horizontal Wind</td><td id="windHCell">—</td><td>Height</td><td><span class="bigLine" id="windHLine">—</span> plf</td></tr>
+            <tr><td>Max Vertical Roof Wind</td><td id="windVCell">—</td><td>Roof tributary</td><td><span class="bigLine" id="windVLine">—</span> plf</td></tr>
+          </tbody>
+        </table>
+        <div class="note" id="summaryNote"></div>
+        <div class="btnRow"><button onclick="calculate()">Recalculate</button><button class="secondary" onclick="resetDefaults()">Reset Defaults</button></div>
+      </section>
+
+      <section class="card">
+        <h2><span class="mark">ⓘ</span>Important Notes</h2>
+        <div class="note">This version now separates MWFRS wind into windward wall, leeward wall, side wall, windward roof, leeward roof, net horizontal load, and vertical roof uplift/downward load. Final design still needs the exact ASCE 7 coefficient tables/figures, wind direction cases, enclosure classification, and load combinations required by your instructor.</div>
+        <div class="resultBox"><div class="label">One-Side Roof Slope Length</div><div class="value"><span id="slopeLen">—</span> <small>ft</small></div></div>
+        <div class="resultBox"><div class="label">Roof Slope Angle</div><div class="value"><span id="roofAngleOut">—</span> <small>deg</small></div></div>
+      </section>
+    </div>
+
+
+    <section class="card full" id="load-combos">
+      <h2><span class="mark">Σ</span>ASCE 7-10 Load Combinations</h2>
+      <table class="table comboTable">
+        <thead><tr><th>Design Method</th><th>Combination</th><th>Frame Line Load Result</th></tr></thead>
+        <tbody id="comboBody"><tr><td colspan="3">Calculate to show combinations.</td></tr></tbody>
+      </table>
+      <div class="note">Combination output uses calculated frame line loads. Wind is shown as governing horizontal wind and governing vertical roof wind separately so you can map them to the correct STAAD axes.</div>
+    </section>
+
+
+    <section class="card full" id="staad">
+      <h2><span class="mark">⎘</span>STAAD.Pro Load Input</h2>
+      <button class="copyBtn" onclick="copyStaad()">Copy</button>
+      <textarea id="staadOut" readonly></textarea>
+      <div class="note">Copy/paste notes are approximate load blocks. Replace member numbers/ranges and directions with your actual STAAD model members.</div>
+    </section>
+  </main>
+</div>
+
+<script>
+
+const roofLiveDefaults = {
+  gable: {
+    Lo: 20,
+    R1: 1.00,
+    R2: 0.85,
+    note: "Gable roof starter values. Lo = 20 psf; R2 is set to 0.85 as a pitched-roof starter value. Verify the exact ASCE 7-10 slope factor for your roof slope."
+  },
+  hip: {
+    Lo: 20,
+    R1: 1.00,
+    R2: 0.85,
+    note: "Hip roof starter values. Lo = 20 psf; R2 is set to 0.85 as a pitched-roof starter value. Verify the exact ASCE 7-10 slope factor for your roof slope."
+  },
+  monoslope: {
+    Lo: 20,
+    R1: 1.00,
+    R2: 0.85,
+    note: "Monoslope roof starter values. Lo = 20 psf; R2 is set to 0.85 as a sloped-roof starter value. Verify the exact ASCE 7-10 slope factor for your roof slope."
+  },
+  custom: {
+    Lo: null,
+    R1: null,
+    R2: null,
+    note: "Custom roof factors. Enter Lo, R1, and R2 manually."
+  }
+};
+function applyRoofLiveType(){
+  if(!byId("roofLiveType")) return;
+  const type = byId("roofLiveType").value;
+  const d = roofLiveDefaults[type];
+  if(!d) return;
+  byId("loadType").value = "roof";
+  if(d.Lo !== null) byId("L0").value = d.Lo;
+  if(d.R1 !== null) byId("R1").value = d.R1;
+  if(d.R2 !== null) byId("R2").value = d.R2;
+  calculate();
+}
+function roofTypeUsesOrdinaryCap(){
+  if(!byId("roofLiveType")) return true;
+  return ["gable","hip","monoslope","custom"].includes(byId("roofLiveType").value);
+}
+
+const occMap = {
+  roofOrdinary:20, church:60, assemblyFixed:60, assemblyMovable:100,
+  office:50, residential:40, classroom:40, corridor:80, lobby:100,
+  storageLight:125, custom:null
+};
+
+const layerMaterialDefaults = {
+  gypsum: {name:"Gypsum Board / Drywall", thick:0.5, unit:50, psf:null},
+  plywood: {name:"Plywood / OSB Sheathing", thick:0.75, unit:34, psf:null},
+  insulation_poly: {name:"Polystyrene Insulation", thick:0.5, unit:1.5, psf:null},
+  insulation_fiber: {name:"Fiberglass Insulation", thick:3.5, unit:0.7, psf:null},
+  asphalt_shingles: {name:"Asphalt Shingles", thick:0, unit:0, psf:2.0},
+  metal_roof: {name:"Metal Roofing", thick:0, unit:0, psf:1.5},
+  built_up_roof: {name:"Built-up Roofing", thick:0, unit:0, psf:5.0},
+  wood: {name:"Wood Framing", thick:1.5, unit:35, psf:null},
+  steel: {name:"Steel", thick:0.125, unit:490, psf:null},
+  concrete_normal: {name:"Normal Weight Concrete", thick:4.0, unit:145, psf:null},
+  concrete_light: {name:"Lightweight Concrete", thick:4.0, unit:110, psf:null},
+  masonry: {name:"Masonry", thick:8.0, unit:125, psf:null},
+  custom: {name:"Custom", thick:0, unit:0, psf:0}
+};
+function applyLayerMaterial(i){
+  const type = byId("l"+i+"type").value;
+  const d = layerMaterialDefaults[type];
+  if(!d) return;
+
+  // Do NOT overwrite the Layer name. The layer name is a user label.
+  // Only update the calculation values tied to the selected material.
+  byId("l"+i+"thick").value = d.thick;
+  byId("l"+i+"unit").value = d.unit;
+
+  if(d.psf === null){
+    byId("l"+i+"psf").value = (d.thick / 12 * d.unit).toFixed(2);
+  } else {
+    byId("l"+i+"psf").value = Number(d.psf).toFixed(2);
+  }
+  calculate();
+}
+
+function applyLocationDefaults(){
+  const loc = byId("location").value;
+  const defaults = {
+    "Beaumont, Texas": 115,
+    "Houston, Texas": 115,
+    "Dallas, Texas": 105,
+    "El Paso, Texas": 105
+  };
+  if(defaults[loc] !== undefined){
+    byId("windSpeed").value = defaults[loc];
+  }
+  calculate();
+}
+function applyRiskCategory(){
+  // Risk category is included in the output note. Wind speed still must be confirmed from ASCE maps.
+  calculate();
+}
+function applyRoofShape(){
+  const shape = byId("roofShape").value;
+  if(shape === "Flat / Low Slope"){
+    byId("roofRise").value = 0;
+  }
+  if(byId("roofLiveType")){
+    if(shape === "Symmetrical Gable") byId("roofLiveType").value = "gable";
+    if(shape === "Hip Roof") byId("roofLiveType").value = "hip";
+    if(shape === "Mono-Slope") byId("roofLiveType").value = "monoslope";
+    applyRoofLiveType();
+    return;
+  }
+  calculate();
+}
+function applyDirection(){
+  calculate();
+}
+function applyWindPressureBasis(){
+  calculate();
+}
+function applyGcpiCase(){
+  calculate();
+}
+
+
+function byId(id){return document.getElementById(id);}
+function getVal(id, fallback){
+  const el = byId(id);
+  return el ? el.value : fallback;
+}
+function getText(id, fallback){
+  const el = byId(id);
+  if(!el) return fallback;
+  if(el.options && el.selectedIndex >= 0) return el.options[el.selectedIndex].text;
+  return el.value || fallback;
+}
+function num(id){return parseFloat(byId(id).value)||0;}
+function fmt(n,d=2){ if(!isFinite(n))return "—"; return Number(n).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function signed(n){ 
+  const s = fmt(n);
+  const cls = n < 0 ? "negative" : "positive";
+  return `<span class="${cls}">${s}</span>`;
+}
+function applyOccupancy(){
+  const occ=byId("occupancy").value;
+  if(occMap[occ]!==null) byId("L0").value=occMap[occ];
+  if(occ==="roofOrdinary") { byId("loadType").value="roof"; if(byId("roofLiveType")) byId("roofLiveType").value="gable"; }
+  calculate();
+}
+function applyExposure(){
+  const map={B:0.70,C:0.85,D:1.03};
+  byId("Kz").value=map[byId("exposure").value];
+  calculate();
+}
+function applyEnclosure(){
+  const map={enclosed:0.18,partially:0.55,open:0.00};
+  byId("GCpiAbs").value=map[byId("enclosure").value];
+  calculate();
+}
+function getLayerPsf(i){
+  const thick = num("l"+i+"thick");
+  const unit = num("l"+i+"unit");
+  const typedPsf = num("l"+i+"psf");
+  const type = byId("l"+i+"type").value;
+
+  // Roofing/custom sheet-type materials use the typed psf directly.
+  if(type === "asphalt_shingles" || type === "metal_roof" || type === "built_up_roof" || type === "custom"){
+    return typedPsf;
+  }
+
+  // Dimensional/depth materials calculate psf from thickness and unit weight.
+  if(thick > 0 && unit > 0){
+    const calcPsf = thick / 12 * unit;
+    byId("l"+i+"psf").value = calcPsf.toFixed(2);
+    return calcPsf;
+  }
+
+  return typedPsf;
+}
+function getGeom(){
+  const W=num("buildingWidth"), rise=num("roofRise"), half=W/2;
+  const slope=Math.sqrt(half*half+rise*rise);
+  const angle=Math.atan2(rise, half);
+  const angleDeg=angle*180/Math.PI;
+  const meanH = byId("meanHeightMode").value==="manual" ? num("manualMeanHeight") : num("eaveHeight") + rise/2;
+  return {W,rise,half,slope,angle,angleDeg,meanH};
+}
+function getTrib(){
+  const method=byId("tribMethod").value;
+  const W=num("buildingWidth"), rise=num("roofRise"), fs=num("frameSpacing");
+  const half=W/2, slope=Math.sqrt(half*half+rise*rise);
+  let area=0,width=0;
+  if(method==="roofFrame"){ width=fs; area=2*slope*width; }
+  else if(method==="manual"){ area=num("manualArea"); width=num("memberSpan")>0?area/num("memberSpan"):0; }
+  else if(method==="beamSpanWidth"){ width=num("tribWidth"); area=num("memberSpan")*width; }
+  else if(method==="rectBay"){ width=num("bayWidth"); area=num("bayLength")*num("bayWidth"); }
+  else if(method==="interiorBeam"){ width=num("leftSpacing")/2+num("rightSpacing")/2; area=num("memberSpan")*width; }
+  return {area,width,slope};
+}
+function getLive(AT){
+  const type=byId("loadType").value;
+  const L0=num("L0");
+  const rule=byId("reductionRule").value;
+  if(type==="roof"){
+    let rawLr = L0*num("R1")*num("R2");
+    let Lr = rawLr;
+    const roofType = byId("roofLiveType") ? byId("roofLiveType").value : "ordinary";
+    const ordinaryCap = roofTypeUsesOrdinaryCap();
+    if(ordinaryCap){
+      if(Lr<12)Lr=12;
+      if(Lr>20)Lr=20;
+    }
+    if(rule==="forceNoReduce")Lr=L0;
+    const roofNote = byId("roofLiveType") && roofLiveDefaults[roofType] ? roofLiveDefaults[roofType].note : "Roof live load.";
+    return {L:Lr,note:`${roofNote} Current input: Lo=${fmt(L0)} psf, R1=${fmt(num("R1"))}, R2=${fmt(num("R2"))}; raw = ${fmt(rawLr)} psf; final used = ${fmt(Lr)} psf.`};
+  }
+  const KLL=num("KLL");
+  const IA=KLL*AT;
+  const floors=parseInt(byId("floorsSupported").value)||1;
+  if(rule==="forceNoReduce" || (L0>100 && rule!=="forceReduce") || (IA<400 && rule!=="forceReduce")){
+    return {L:L0,note:`Unreduced floor live load used.`};
+  }
+  const raw=0.25+15/Math.sqrt(Math.max(IA,1));
+  const minFactor=floors===1?0.50:0.40;
+  let L=L0*raw;
+  L=Math.max(L,L0*minFactor);
+  L=Math.min(L,L0);
+  return {L,note:`Reduced floor live load using influence area KLL × AT = ${fmt(IA)} sf.`};
+}
+function calcPressure(q, gcpe, qInternal, gcpi){
+  return q*gcpe - qInternal*gcpi;
+}
+function govAbs(a,b){
+  return Math.abs(a) >= Math.abs(b) ? a : b;
+}
+function activeGov(pPlus, pMinus){
+  const mode = byId("gcpiCase").value;
+  if(mode === "positive") return pPlus;
+  if(mode === "negative") return pMinus;
+  return govAbs(pPlus, pMinus);
+}
+function showCaseValue(value, caseName){
+  const mode = byId("gcpiCase").value;
+  if(mode === "positive" && caseName === "minus") return "not used";
+  if(mode === "negative" && caseName === "plus") return "not used";
+  return signed(value);
+}
+function fillWindRow(prefix, pPlus, pMinus, lineFactor){
+  const gov = activeGov(pPlus,pMinus);
+  byId(prefix+"Plus").innerHTML = showCaseValue(pPlus, "plus");
+  byId(prefix+"Minus").innerHTML = showCaseValue(pMinus, "minus");
+  byId(prefix+"Gov").innerHTML = signed(gov);
+  byId(prefix+"Line").innerHTML = signed(gov*lineFactor) + " plf";
+  return {pPlus,pMinus,gov,line:gov*lineFactor};
+}
+
+function applyWindCoefficientPreset(){
+  const preset = byId("windCoeffPreset") ? byId("windCoeffPreset").value : "manual";
+  if(preset === "manual"){ calculate(); return; }
+  if(preset === "gableLowRise"){
+    byId("GCpWW").value = 0.80; byId("GCpLW").value = -0.50; byId("GCpSW").value = -0.70; byId("GCpWR").value = -0.90; byId("GCpLR").value = -0.50;
+  } else if(preset === "conservativeUplift"){
+    byId("GCpWW").value = 0.80; byId("GCpLW").value = -0.50; byId("GCpSW").value = -0.70; byId("GCpWR").value = -1.10; byId("GCpLR").value = -0.80;
+  } else if(preset === "wallsOnly"){
+    byId("GCpWW").value = 0.80; byId("GCpLW").value = -0.50; byId("GCpSW").value = -0.70; byId("GCpWR").value = 0.00; byId("GCpLR").value = 0.00;
+  }
+  calculate();
+}
+function comboRow(method, label, value){
+  return `<tr><td>${method}</td><td>${label}</td><td>${signed(value)} plf</td></tr>`;
+}
+function updateLoadCombinations(Dline, LLline, windHLine, windVLine){
+  if(!byId("comboBody")) return;
+  const set = byId("comboSet") ? byId("comboSet").value : "both";
+  const lrfdW = byId("lrfdWindFactor") ? num("lrfdWindFactor") : 1.0;
+  const asdW = byId("asdWindFactor") ? num("asdWindFactor") : 0.6;
+  const includeLr = !byId("includeLrWind") || byId("includeLrWind").value === "yes";
+  const LrForWind = includeLr ? LLline : 0;
+  const Wh = windHLine;
+  const Wv = windVLine;
+  let rows = [];
+  if(set === "lrfd" || set === "both"){
+    rows.push(comboRow("LRFD", "1.4D", 1.4*Dline));
+    rows.push(comboRow("LRFD", "1.2D + 1.6Lr", 1.2*Dline + 1.6*LLline));
+    rows.push(comboRow("LRFD", "1.2D + W(horizontal) + Lr", 1.2*Dline + lrfdW*Wh + LrForWind));
+    rows.push(comboRow("LRFD", "1.2D + W(vertical roof) + Lr", 1.2*Dline + lrfdW*Wv + LrForWind));
+    rows.push(comboRow("LRFD", "0.9D + W(horizontal)", 0.9*Dline + lrfdW*Wh));
+    rows.push(comboRow("LRFD", "0.9D + W(vertical roof uplift)", 0.9*Dline + lrfdW*Wv));
+  }
+  if(set === "asd" || set === "both"){
+    rows.push(comboRow("ASD", "D", Dline));
+    rows.push(comboRow("ASD", "D + Lr", Dline + LLline));
+    rows.push(comboRow("ASD", "D + 0.6W(horizontal)", Dline + asdW*Wh));
+    rows.push(comboRow("ASD", "D + 0.6W(vertical roof)", Dline + asdW*Wv));
+    rows.push(comboRow("ASD", "D + 0.75Lr + 0.75(0.6W horizontal)", Dline + 0.75*LLline + 0.75*asdW*Wh));
+    rows.push(comboRow("ASD", "D + 0.75Lr + 0.75(0.6W vertical roof)", Dline + 0.75*LLline + 0.75*asdW*Wv));
+    rows.push(comboRow("ASD", "0.6D + 0.6W(horizontal)", 0.6*Dline + asdW*Wh));
+    rows.push(comboRow("ASD", "0.6D + 0.6W(vertical roof uplift)", 0.6*Dline + asdW*Wv));
+  }
+  byId("comboBody").innerHTML = rows.join("");
+}
+
+function calculate(){
+  const geom=getGeom();
+  const trib=getTrib();
+  const roofSlopeRatio = geom.half>0 ? geom.slope/geom.half : 1;
+  const areaAdjust=byId("areaBasis").value==="slope" ? roofSlopeRatio : 1;
+  const DL=getLayerPsf(1)+getLayerPsf(2)+getLayerPsf(3)+getLayerPsf(4)+getLayerPsf(5);
+  const live=getLive(trib.area);
+  const fs=num("frameSpacing");
+  const eaveH=num("eaveHeight");
+  const DLline=DL*fs*areaAdjust;
+  const LLline=live.L*fs*areaAdjust;
+  const totalLine=DLline+LLline;
+  const totalPsf=(DL+live.L)*areaAdjust;
+
+  const qh=0.00256*num("Kz")*num("Kzt")*num("Kd")*Math.pow(num("windSpeed"),2);
+  const qzWall = byId("windPressureBasis").value==="separate" ? 0.00256*num("Kz")*num("Kzt")*num("Kd")*Math.pow(num("windSpeed"),2) : qh;
+  const qi = qh;
+  const gcpiAbs = Math.abs(num("GCpiAbs"));
+  const gcpiPlus = gcpiAbs;
+  const gcpiMinus = -gcpiAbs;
+
+  const wwPp = calcPressure(qzWall,num("GCpWW"),qi,gcpiPlus);
+  const wwPm = calcPressure(qzWall,num("GCpWW"),qi,gcpiMinus);
+  const lwPp = calcPressure(qh,num("GCpLW"),qi,gcpiPlus);
+  const lwPm = calcPressure(qh,num("GCpLW"),qi,gcpiMinus);
+  const swPp = calcPressure(qh,num("GCpSW"),qi,gcpiPlus);
+  const swPm = calcPressure(qh,num("GCpSW"),qi,gcpiMinus);
+  const wrPp = calcPressure(qh,num("GCpWR"),qi,gcpiPlus);
+  const wrPm = calcPressure(qh,num("GCpWR"),qi,gcpiMinus);
+  const lrPp = calcPressure(qh,num("GCpLR"),qi,gcpiPlus);
+  const lrPm = calcPressure(qh,num("GCpLR"),qi,gcpiMinus);
+
+  const wallLineFactor = eaveH;
+  const roofNormalLineFactor = fs;
+  const roofVerticalLineFactor = fs * Math.cos(geom.angle);
+
+  const ww = fillWindRow("ww", wwPp, wwPm, wallLineFactor);
+  const lw = fillWindRow("lw", lwPp, lwPm, wallLineFactor);
+  const sw = fillWindRow("sw", swPp, swPm, wallLineFactor);
+  const wr = fillWindRow("wr", wrPp, wrPm, roofNormalLineFactor);
+  const lr = fillWindRow("lr", lrPp, lrPm, roofNormalLineFactor);
+
+  const netHPlus = wwPp + Math.abs(lwPp);
+  const netHMinus = wwPm + Math.abs(lwPm);
+  const netHGov = activeGov(netHPlus, netHMinus);
+  byId("netHPlus").innerHTML=showCaseValue(netHPlus, "plus");
+  byId("netHMinus").innerHTML=showCaseValue(netHMinus, "minus");
+  byId("netHGov").innerHTML=signed(netHGov);
+  byId("netHLine").innerHTML=signed(netHGov*wallLineFactor) + " plf";
+
+  const netVPlus = (wrPp + lrPp) * Math.cos(geom.angle);
+  const netVMinus = (wrPm + lrPm) * Math.cos(geom.angle);
+  const netVGov = activeGov(netVPlus, netVMinus);
+  byId("netVPlus").innerHTML=showCaseValue(netVPlus, "plus");
+  byId("netVMinus").innerHTML=showCaseValue(netVMinus, "minus");
+  byId("netVGov").innerHTML=signed(netVGov);
+  byId("netVLine").innerHTML=signed(netVGov*fs) + " plf";
+
+  byId("tribWidthOut").textContent=fmt(trib.width);
+  byId("ATout").textContent=fmt(trib.area);
+  byId("slopeLen").textContent=fmt(trib.slope);
+  byId("roofAngleOut").textContent=fmt(geom.angleDeg);
+  byId("meanHeightOut").textContent=fmt(geom.meanH);
+  byId("DLpsf").textContent=fmt(DL);
+  byId("LLpsf").textContent=fmt(live.L);
+  byId("liveNote").textContent=live.note;
+  byId("qhOut").textContent=fmt(qh);
+  byId("qzWallOut").textContent=fmt(qzWall);
+
+  byId("DLcell").textContent=fmt(DL);
+  byId("LLcell").textContent=fmt(live.L);
+  byId("totalPsf").textContent=fmt(totalPsf);
+  byId("windHCell").innerHTML=signed(netHGov);
+  byId("windVCell").innerHTML=signed(netVGov);
+  byId("spacing1").textContent=fmt(fs)+" ft";
+  byId("spacing2").textContent=fmt(fs)+" ft";
+  byId("spacing3").textContent=fmt(fs)+" ft";
+  byId("DLline").textContent=fmt(DLline);
+  byId("LLline").textContent=fmt(LLline);
+  byId("gravityLine").textContent=fmt(totalLine);
+  byId("windHLine").innerHTML=signed(netHGov*wallLineFactor);
+  byId("windVLine").innerHTML=signed(netVGov*fs);
+  byId("summaryNote").innerHTML=`Gravity line load = (DL + LL) × frame spacing × area basis factor = (${fmt(DL)} + ${fmt(live.L)}) psf × ${fmt(fs)} ft × ${fmt(areaAdjust,3)} = ${fmt(totalLine)} plf. MWFRS wind is separated into wall and roof surfaces, with both +GCpi and -GCpi internal pressure cases checked.`;
+  updateLoadCombinations(DLline, LLline, netHGov*wallLineFactor, netVGov*fs);
+  byId("status").textContent="Results updated. ASCE 7-10 settings, dropdowns, wind surfaces, and load combinations are active.";
+
+  const staad = [
+    `** LAMAR UNIVERSITY - ASCE 7 PROJECT LOADS **`,
+    `* Project: ${byId("projectName").value}`,
+    `* Location: ${byId("location").value}`,
+    `* Edition: ${byId("edition").value}; Risk Category: ${byId("risk").value}`,
+    `* Direction: ${byId("direction").value}; Enclosure: ${byId("enclosure").options[byId("enclosure").selectedIndex].text}`,
+    `* MWFRS Procedure: ${getText("mwfrsProcedure","Manual")}`,
+    `* Material/System: ${byId("material").value} / ${byId("systemType").value}`,
+    `* Roof angle = ${fmt(geom.angleDeg)} deg`,
+    `* Mean roof height = ${fmt(geom.meanH)} ft`,
+    `* Tributary Area = ${fmt(trib.area)} sf`,
+    `* Frame Spacing = ${fmt(fs)} ft`,
+    ``,
+    `LOAD 1 DEAD LOAD`,
+    `LOADTYPE Dead  TITLE DL`,
+    `* DL = ${fmt(DL)} psf`,
+    `* Approx. DL frame line load = ${fmt(DLline)} plf`,
+    ``,
+    `LOAD 2 ROOF LIVE / LIVE LOAD`,
+    `LOADTYPE Live  TITLE LL`,
+    `* Live load used = ${fmt(live.L)} psf`,
+    `* Approx. live frame line load = ${fmt(LLline)} plf`,
+    ``,
+    `LOAD 3 WIND +GCPI - WALLS`,
+    `LOADTYPE Wind  TITLE WL_PLUS_WALLS`,
+    `* Windward wall pressure = ${fmt(wwPp)} psf`,
+    `* Leeward wall pressure = ${fmt(lwPp)} psf`,
+    `* Net horizontal frame line load = ${fmt(netHPlus*wallLineFactor)} plf`,
+    ``,
+    `LOAD 4 WIND -GCPI - WALLS`,
+    `LOADTYPE Wind  TITLE WL_MINUS_WALLS`,
+    `* Windward wall pressure = ${fmt(wwPm)} psf`,
+    `* Leeward wall pressure = ${fmt(lwPm)} psf`,
+    `* Net horizontal frame line load = ${fmt(netHMinus*wallLineFactor)} plf`,
+    ``,
+    `LOAD 5 WIND +GCPI - ROOF`,
+    `LOADTYPE Wind  TITLE WL_PLUS_ROOF`,
+    `* Windward roof pressure normal to roof = ${fmt(wrPp)} psf`,
+    `* Leeward roof pressure normal to roof = ${fmt(lrPp)} psf`,
+    `* Vertical roof wind line load = ${fmt(netVPlus*fs)} plf`,
+    ``,
+    `LOAD 6 WIND -GCPI - ROOF`,
+    `LOADTYPE Wind  TITLE WL_MINUS_ROOF`,
+    `* Windward roof pressure normal to roof = ${fmt(wrPm)} psf`,
+    `* Leeward roof pressure normal to roof = ${fmt(lrPm)} psf`,
+    `* Vertical roof wind line load = ${fmt(netVMinus*fs)} plf`,
+    ``,
+    `* Replace member ranges and directions with actual STAAD model geometry.`,
+    `* Positive/negative signs must be mapped to your STAAD global axes.`
+  ].join("\n");
+  byId("staadOut").value=staad;
+}
+function copyStaad(){ byId("staadOut").select(); document.execCommand("copy"); }
+
+function addCalcListener(id){
+  const el = byId(id);
+  if(el){
+    el.addEventListener("input", calculate);
+    el.addEventListener("change", calculate);
+  }
+}
+
+function resetDefaults(){ location.reload(); }
+[
+"projectName",
+"location",
+"edition",
+"risk",
+"enclosure",
+"direction",
+"buildingLength",
+"buildingWidth",
+"eaveHeight",
+"roofRise",
+"frameSpacing",
+"purlinSpacingIn",
+"tribMethod",
+"memberSpan",
+"tribWidth",
+"manualArea",
+"bayLength",
+"bayWidth",
+"leftSpacing",
+"rightSpacing",
+"areaBasis",
+"material",
+"systemType",
+"roofShape",
+"designMethod",
+"KLL",
+"floorsSupported",
+"l1name",
+"l1type",
+"l1thick",
+"l1unit",
+"l1psf",
+"l2name",
+"l2type",
+"l2thick",
+"l2unit",
+"l2psf",
+"l3name",
+"l3type",
+"l3thick",
+"l3unit",
+"l3psf",
+"l4name",
+"l4type",
+"l4thick",
+"l4unit",
+"l4psf",
+"l5name",
+"l5type",
+"l5thick",
+"l5unit",
+"l5psf",
+"roofLiveType",
+"loadType",
+"occupancy",
+"L0",
+"R1",
+"R2",
+"reductionRule",
+"windSpeed",
+"exposure",
+"Kz",
+"Kzt",
+"Kd",
+"meanHeightMode",
+"manualMeanHeight",
+"windPressureBasis",
+"gcpiCase",
+"GCpWW",
+"GCpLW",
+"GCpSW",
+"GCpWR",
+"GCpLR",
+"GCpiAbs",
+"asceProcedure",
+"mwfrsProcedure",
+"comboSet",
+"asdWindFactor",
+"lrfdWindFactor",
+"includeLrWind",
+"windCoeffPreset"
+].forEach(addCalcListener);
+try { calculate(); } catch(e) { const s=document.getElementById('status'); if(s){s.textContent='Startup calculation error: '+e.message; s.style.background='#fee2e2'; s.style.color='#991b1b';} console.error(e); }
+
+window.addEventListener('error', function(e){
+  const status = document.getElementById('status');
+  if(status){
+    status.textContent = 'JavaScript error: ' + e.message;
+    status.style.background = '#fee2e2';
+    status.style.color = '#991b1b';
+  }
+});
+</script>
+</body>
+<!-- QA CHECK:
+Source file: lamar_asce7_10_complete_based_calculator.html
+Fixed dead-load material selection so it does not overwrite l#name layer labels.
+Deadload dropdown onchange handlers present: True
+Missing optional listener ids in HTML: []
+Missing onchange function definitions: []
+-->
+<!-- FIXED:
+- Guarded all event listeners so missing optional IDs cannot stop JavaScript.
+- Added hidden defaults for optional ASCE controls if absent.
+- Startup calculation is wrapped with visible error reporting.
+-->
+</html>
